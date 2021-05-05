@@ -2,263 +2,235 @@ from tkinter import *
 import os
 
 # Django and Flask are the most popular tools used to write an application server in Python
-
+# TODO: Create a random directory name. 
+# TODO: Destroy the labels after shown for a few seconds. 
+# TODO: Save notes into directory of username.
+# TODO: If notes file already exist do not overwrite. 
+# TODO: Make it so the user can not resize the UI
+# Added icon, optimized code, changed variable names, removed boilerplate code, 
+# Thread to run the sleep command on the text? Make it sleep? And then it disappers. 
 
 def register_user():
-
     username_info = username.get()
     password_info = password.get()
+    
+    try:
+        os.makedirs(username_info)
+        os.chdir(username_info)  
+        file = open(username_info, "w")
+        file.write("Username:\n")
+        file.write(username_info + "\n")
+        file.write("Password:\n")
+        file.write(password_info)
+        file.close()
+        
+        Label(screen1, text="Registration successful!", fg="green", font=("Lato", 12)).pack()
+    except FileExistsError:
+        Label(screen1, text="User Already Created", fg="orange", font=("Lato", 12)).pack()
+        
+    entry_username.delete(0,END)
+    entry_password.delete(0,END)
 
-    file = open(username_info, "w")
-    file.write("Username:\n")
-    file.write(username_info + "\n")
-    file.write("Password:\n")
-    file.write(password_info)
-    file.close()
-
-    entry_username.delete(0, END)
-    entry_password.delete(0, END)
-
-    Label(screen1, text="Registration successful!",
-          fg="green", font=("Lato", 12)).pack()
-
-
-def destroyed():
-    screen4.destroy()
-
-
-def destroyed1():
-    screen5.destroy()
-
+def save_file():
+    get_file_name = create_file_name.get()
+    get_notes = create_notes.get()
+    
+    data = open(get_file_name, "w")
+    data.write(get_notes)
+    data.close()
+    
+    Label(screen7, text="Text File Saved", fg="green", font=("Lato", 12)).pack()
 
 def login_completed():
-    session()
-
-
-def saved():
-    Label(screen7, text="Saved", fg="green", font=("Lato", 12)).pack()
-
-
-def save():
-    filename_get = raw_filename.get()
-    notes_get = raw_notes.get()
-
-    data = open(filename_get, "w")
-    data.write(notes_get)
-    data.close()
-
-    saved()
-
-
-def session():
     screen6 = Toplevel(screen)
     screen6.title("Dashboard")
     screen6.geometry("350x250")
-    Label(screen6, text="Welcome to the dashboard").pack()
-    Button(screen6, text="Create secret note",
-           command=create_secret_notes).pack()
+    
+    Label(screen6, text="Welcome to the dashboard").pack() 
+    Button(screen6, text="Create secret note", command=create_secret_notes).pack()
     Button(screen6, text="View secret note", command=view_notes).pack()
-    Button(screen6, text="Delete secret note", command=delete_note).pack()
+    Button(screen6, text="Delete secret note", command=delete_notes).pack()
 
 
-def delete_note():
+def delete_notes():
+    global delete_file
+
     screen10 = Toplevel(screen)
     screen10.title("Delete")
-    screen10.geometry("250x250")
+    screen10.geometry("350x250")
+    
     all_files = os.listdir()
+    
     Label(screen10, text="Choose a filename to delete: ").pack()
     Label(screen10, text=all_files).pack()
-    global raw_delete
-    raw_delete = StringVar()
-    Entry(screen10, textvariable=raw_delete).pack()
-    Button(screen10, command=delete_note1, text="OK").pack()
+    
+    delete_file = StringVar()
+    
+    Entry(screen10, textvariable=delete_file).pack()
+    Button(screen10, command=delete_notes_message, text="OK").pack()
 
 
-def delete_note1():
-    delete = raw_delete.get()
+def delete_notes_message():
+    delete = delete_file.get()
     os.remove(delete)
+    
     screen11 = Toplevel(screen)
     screen11.title("Notes")
-    screen11.geometry("400x400")
+    screen11.geometry("350x250")
+    
     Label(screen11, text=delete + " has been removed").pack()
 
 
 def create_secret_notes():
-    global raw_filename
-    global raw_notes
+    global create_file_name
+    global create_notes
     global screen7
-
-    raw_filename = StringVar()
-    raw_notes = StringVar()
-
+    
+    create_file_name = StringVar()
+    create_notes = StringVar()
+    
     screen7 = Toplevel(screen)
     screen7.title("Make Notes")
-    screen7.geometry("250x150")
+    screen7.geometry("350x250")
+    
     Label(screen7, text="Enter a filename: ").pack()
-    Entry(screen7, textvariable=raw_filename).pack()
+    Entry(screen7, textvariable=create_file_name).pack()
     Label(screen7, text="Enter secret notes: ").pack()
-    Entry(screen7, textvariable=raw_notes).pack()
-    Button(screen7, text="Save", command=save).pack()
+    Entry(screen7, textvariable=create_notes).pack()
+    Button(screen7, text="Save", command=save_file).pack()
 
+def choose_files():
+    global file_name
 
-def view_notes1():
-    filename1 = raw_filename1.get()
-    data = open(filename1, "r")
-    data1 = data.read()
-    screen9 = Toplevel(screen)
-    screen9.title("Notes")
-    screen9.geometry("400x400")
-    Label(screen9, text=data1).pack()
-
-
-def view_notes():
     screen8 = Toplevel(screen)
     screen8.title("Info")
-    screen8.geometry("250x250")
+    screen8.geometry("350x250")
+    
     all_files = os.listdir()
+    
     Label(screen8, text="Choose a filename below: ").pack()
     Label(screen8, text=all_files).pack()
-    global raw_filename1
-    raw_filename1 = StringVar()
-    Entry(screen8, textvariable=raw_filename1).pack()
-    Button(screen8, command=view_notes1, text="OK").pack()
-
-
-def pass_not_recognized():
-    global screen4
-    screen4 = Toplevel(screen)
-    screen4.title("Retype pass!")
-    screen4.geometry("250x150")
-    Label(screen4, text="Password Error!").pack()
-    Button(screen4, text="OK", command=destroyed).pack()
-
-
-def user_not_found():
-    global screen5
-    screen5 = Toplevel(screen)
-    screen5.title("Retype user!")
-    screen5.geometry("250x150")
-    Label(screen5, text="User not found!").pack()
-    Button(screen5, text="OK", command=destroyed1).pack()
-
+    
+    file_name = StringVar()
+    
+    Entry(screen8, textvariable=file_name).pack()
+    Button(screen8, command=view_notes, text="OK").pack()
+    
+def view_notes():    
+    screen9 = Toplevel(screen)
+    screen9.title("Notes")
+    screen9.geometry("350x250")    
+    
+    read_notes = open(file_name.get(), "r")
+    data = read_notes.read()
+    
+    Label(screen9, text=data).pack()
 
 def login_verify():
-    username1 = user_verify.get()
-    password1 = pass_verify.get()
+    get_username = user_verify.get()
+    get_password = pass_verify.get()
 
     list_of_files = os.listdir()
-    if username1 in list_of_files:
-        file1 = open(username1, "r")
+    if get_username in list_of_files:
+        os.chdir(user_verify.get())
+        file1 = open(get_username, "r")
         verify = file1.read().splitlines()
-
-        if password1 in verify:
+        if get_password in verify:
             login_completed()
         else:
-            pass_not_recognized()
-
+            Label(screen2, text="Password Error!", fg="red", font=("Lato", 12)).pack()
     else:
-        user_not_found()
-
-
-def register_page():
-    global screen1
-    screen1 = Toplevel(screen)
-    screen1.title("Register")
-    screen1.geometry("350x250")
-
-    global username
-    global password
-    global entry_username
-    global entry_password
-
-    username = StringVar()
-    password = StringVar()
-
-    Label(screen1, text="Please enter your details").pack()
-    Label(screen1, text="").pack()
-    Label(screen1, text="Username * ").pack()
-    entry_username = Entry(screen1, textvariable=username)
-    entry_username.pack()
-    Label(screen1, text="Password * ").pack()
-    entry_password = Entry(screen1, textvariable=password)
-    entry_password.pack()
-    Label(screen1, text="").pack()
-    entry_password.config(show="*")
-    password_show = Button(screen1, text="Show password!",
-                           height="1", width="12", command=buttonshow).pack()
-    password_hide = Button(screen1, text="Hide password!",
-                           height="1", width="12", command=buttonhide).pack()
-    Button(screen1, text="Register", height="1",
-           width="10", command=register_user).pack()
-
-
-def buttonshow():
-    entry_password.config(show="")
-
-
-def buttonhide():
-    entry_password.config(show="*")
-
+        Label(screen2, text="User not found!", fg="red", font=("Lato", 12)).pack()
+    
+    os.chdir("..")
 
 def login_page():
     global screen2
+    global entry_username1
+    global entry_password1
+    global user_verify
+    global pass_verify
+    
     screen2 = Toplevel(screen)
     screen2.title("Login")
     screen2.geometry("350x250")
-
+    
     Label(screen2, text="Please enter your login details").pack()
     Label(screen2, text="").pack()
-
-    global user_verify
-    global pass_verify
-
+    
     user_verify = StringVar()
     pass_verify = StringVar()
 
-    global entry_username1
-    global entry_password1
-
-    Label(screen2, text="Username * ").pack()
+    Label(screen2, text="Username").pack()
     entry_username1 = Entry(screen2, textvariable=user_verify)
     entry_username1.pack()
-    Label(screen2, text="Password * ").pack()
+    Label(screen2, text="Password").pack()
     entry_password1 = Entry(screen2, textvariable=pass_verify)
     entry_password1.pack()
     Label(screen2, text="").pack()
     entry_password1.config(show="*")
+    
+    Button(screen2, text="Show password!", height="1", width="12", command=buttonshow1).pack()
+    Button(screen2, text="Hide password!", height="1", width="12", command=buttonhide1).pack()
+    Button(screen2, text="Login", height="1", width="10", command=login_verify).pack()
 
-    password_show1 = Button(screen2, text="Show password!",
-                            height="1", width="12", command=buttonshow1).pack()
-    password_hide1 = Button(screen2, text="Hide password!",
-                            height="1", width="12", command=buttonhide1).pack()
+def buttonshow():
+    entry_password.config(show="")
 
-    Button(screen2, text="Login", height="1",
-           width="10", command=login_verify).pack()
-
-
+def buttonhide():
+    entry_password.config(show="*")
+    
 def buttonshow1():
     entry_password1.config(show="")
 
-
 def buttonhide1():
     entry_password1.config(show="*")
+    
+def register_page():
+    global screen1
+    global username
+    global password
+    global entry_username
+    global entry_password
+    
+    screen1 = Toplevel(screen)
+    screen1.title("Register")
+    screen1.geometry("350x250")
+    
+    username = StringVar()
+    password = StringVar()
+    
+    Label(screen1, text="Please enter your details").pack()
+    Label(screen1, text="").pack()
+    Label(screen1, text="Username").pack()
+    entry_username = Entry(screen1, textvariable=username)
+    entry_username.pack()
+    Label(screen1, text="Password").pack()
+    entry_password = Entry(screen1, textvariable=password)
+    entry_password.pack()
+    Label(screen1, text="").pack() 
+    entry_password.config(show="*")
+    
+    Button(screen1, text="Show password!", height="1", width="12", command=buttonshow).pack()
+    Button(screen1, text="Hide password!", height="1", width="12", command=buttonhide).pack()
+    Button(screen1, text="Register", height="1", width="10", command=register_user).pack()
 
-
-def main_screen():
+    
+def screen():
     global screen
+    
     screen = Tk()
     screen.geometry("350x250")
     screen.title("Secret Notes")
-    Label(text="Secret Notes", bg="grey", width="300",
-          height="2", font=("Lato", 12)).pack()
+    screen.iconphoto(True, PhotoImage(file="./assets/images/favicon.png"))
+        
+    Label(text="Secret Notes", bg="grey", width="300", height="2", font=("Lato", 12)).pack()
     Label(text="").pack()
-    Button(text="Login", height="1", width="25", font=(
-        "Lato", 12), command=login_page).pack()
+    Button(text="Login", height="1", width="25", font=("Lato", 12), command=login_page).pack()
     Label(text="").pack()
-    Button(text="Register", height="1", width="25", font=(
-        "Lato", 12), command=register_page).pack()
-
+    Button(text="Register", height="1", width="25", font=("Lato", 12), command=register_page).pack()
+    
     screen.mainloop()
-
-
-main_screen()
+    
+if __name__ == '__main__':
+    screen()
