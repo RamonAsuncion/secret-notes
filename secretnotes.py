@@ -1,10 +1,9 @@
 from tkinter import *
+from tkinter import font
 import os
-import time
-from tkinter.font import Font 
 
 # Django and Flask are the most popular tools used to write an application server in Python
-# TODO: Create a random directory name? Date should be secured.
+# TODO: Create a random directory name? Date should be secu#E81500.
 # TODO: Destroy the labels after shown for a few seconds. 
 # TODO: Save notes into directory of username.
 # TODO: If notes file already exist do not overwrite. 
@@ -14,8 +13,7 @@ from tkinter.font import Font
 # Welcomes user once signed in, casting file name as a string, 
 
 def register_user():
-    
-    username_info = username.get()
+    username_info = username.get().lower()
     password_info = password.get()
     
     try:
@@ -29,9 +27,10 @@ def register_user():
         file.write(password_info)
         file.close()
         
-        Label(screen1, text="Registration successful!", fg="green", font=("Lato", 12)).pack()
+        Label(screen1, text="Registration successful!", fg="#36BB00", font=("Lato", 12)).pack()
     except FileExistsError:
-        Label(screen1, text="User Already Created", fg="orange", font=("Lato", 12)).pack()
+        Label(screen1, text="User Already Created", fg="#F18300", font=("Lato", 12)).pack()
+        # TODO: Make this exception unnecessary maybe by creating the file instead of trying to chdir when its not found? 
     except FileNotFoundError:
         pass
         
@@ -46,7 +45,7 @@ def save_file():
     data.write(get_notes)
     data.close()
     
-    Label(screen7, text="Text File Saved", fg="green", font=("Lato", 12)).pack()
+    Label(screen7, text="Text File Saved", fg="#36BB00", font=("Lato", 12)).pack()
 
 def login_completed():
     screen6 = Toplevel(main_screen)
@@ -68,10 +67,10 @@ def delete_notes():
     screen10.title("Delete")
     screen10.geometry("350x250")
     
-    all_files = os.listdir()
+    list_all_files = os.listdir()
     
     Label(screen10, text="Choose a filename to delete: ").pack()
-    Label(screen10, text=all_files).pack()
+    Label(screen10, text=list_all_files).pack()
     
     delete_file = StringVar()
     
@@ -115,10 +114,10 @@ def choose_files():
     screen8.title("Info")
     screen8.geometry("350x250")
     
-    all_files = os.listdir()
+    list_all_files = os.listdir()
     
     Label(screen8, text="Choose a filename below: ").pack()
-    Label(screen8, text=all_files).pack()
+    Label(screen8, text=list_all_files).pack()
     
     file_name = StringVar()
     
@@ -136,7 +135,7 @@ def view_notes():
     Label(screen9, text=data).pack()
 
 def login_verify():
-    get_username = user_verify.get()
+    get_username = user_verify.get().lower()
     get_password = pass_verify.get()
 
     list_of_files = os.listdir()
@@ -144,14 +143,14 @@ def login_verify():
         file_name = str(user_verify.get())
         print("Debug file name: " + file_name)
         os.chdir(file_name)
-        file1 = open(get_username, "r")
-        verify = file1.read().splitlines()
+        file_open = open(get_username, "r")
+        verify = file_open.read().splitlines()
         if get_password in verify:
             login_completed()
         else:
-            Label(screen2, text="Password Error!", fg="red", font=("Lato", 12)).pack()
+            Label(screen2, text="Password Error!", fg="#E81500", font=("Lato", 12)).pack()
     else:
-        Label(screen2, text="User not found!", fg="red", font=("Lato", 12)).pack()
+        Label(screen2, text="User not found!", fg="#E81500", font=("Lato", 12)).pack()
     # TODO: When person signout of their account it needs to exit out of the folder 
     # os.chdir("..")   
 
@@ -237,19 +236,16 @@ def screen():
     main_screen.geometry("350x250")
     main_screen.title("Secret Notes")
     main_screen.iconphoto(True, PhotoImage(file="./assets/images/favicon.png"))
-    main_screen.resizable(0,0)
-
+    main_screen.resizable(0,0)    
     
-    default_font = Font(family="Lato", size=12)
-    
-        
-    Label(text="Secret Notes", bg="grey", width="300", height="2", font=("Lato", 12)).pack()
+    Label(text="Secret Notes", bg="#4BA400", fg="#FFFFFF", width="300", height="2", font=("Lato", 14)).pack()
     Label(text="").pack()
     Button(text="Login", height="1", width="25", font=("Lato", 12), command=login_page).pack()
     Label(text="").pack()
     Button(text="Register", height="1", width="25", font=("Lato", 12), command=register_page).pack()
     
-    main_screen.mainloop()
     
+    main_screen.mainloop()
+        
 if __name__ == '__main__':
     screen()
