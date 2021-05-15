@@ -1,25 +1,30 @@
 from tkinter import *
-from tkinter import font
+from tkinter import messagebox
 import os
 
 # Django and Flask are the most popular tools used to write an application server in Python
-# TODO: Create a random directory name? Date should be secu#E81500.
+# TODO: Create a random directory name? 
 # TODO: Destroy the labels after shown for a few seconds. 
 # TODO: Save notes into directory of username.
-# TODO: If notes file already exist do not overwrite. 
-# TODO: Make it so the user can not resize the UI
+# TODO: If notes file already exist do not overwrite those notes. 
+# TODO: Make it so the user can not resize the UI (Done for login, register, and startup!)
+# TODO: Allow the user to enter their username lowercased and it will default to what they originally put. Ex: allowed input: ramonasuncion --> return RamonAsuncion (original)
+# TODO: Change the place to where you write text to 'Text' input instead of textvariable. 
+# TODO: Start working on protecting the password through hashing. 
+# TODO: Add image of an eye for password viewer 
+# TODO: Do not allow certain characters to become usernames (regex)
 # Thread to run the sleep command on the text? Make it sleep? And then it disappers. Need to look more into threads. 
 
-# Welcomes user once signed in, casting file name as a string, 
 
 def register_user():
-    username_info = username.get().lower()
+    username_info = username.get()
     password_info = password.get()
     
     try:
         # TODO: Some names are not allowed to be folders because of they being characters. Also, don't allowed periods so they don't become hidden files: .gitignore
         os.makedirs(username_info)
         os.chdir(username_info)
+        
         file = open(username_info, "w")
         file.write("Username:\n")
         file.write(username_info + "\n")
@@ -28,6 +33,7 @@ def register_user():
         file.close()
         
         Label(screen1, text="Registration successful!", fg="#36BB00", font=("Lato", 12)).pack()
+        
     except FileExistsError:
         Label(screen1, text="User Already Created", fg="#F18300", font=("Lato", 12)).pack()
         # TODO: Make this exception unnecessary maybe by creating the file instead of trying to chdir when its not found? 
@@ -48,6 +54,7 @@ def save_file():
     Label(screen7, text="Text File Saved", fg="#36BB00", font=("Lato", 12)).pack()
 
 def login_completed():
+    global screen6
     screen6 = Toplevel(main_screen)
     screen6.title("Dashboard")
     screen6.geometry("350x250")
@@ -58,7 +65,18 @@ def login_completed():
     Button(screen6, text="Create secret note", command=create_secret_notes).pack()
     Button(screen6, text="View secret note", command=view_notes).pack()
     Button(screen6, text="Delete secret note", command=delete_notes).pack()
+    
+    screen6.protocol("WM_DELETE_WINDOW", close_gui_windows)
 
+# WM_DELETE_WINDOW 
+def close_gui_windows():
+    if messagebox.askokcancel("Warning", "Do you want to exit dashboard?"):
+        # TODO: When person signout of their account it needs to exit out of the folder (testing --> not the most thought out way)
+        
+        
+        # screen6.destory()
+        # TODO: Go back to the main directory folder. ("..") can be risky due to it being access to full location where the folder is located.
+        os.chdir("./")   
 
 def delete_notes():
     global delete_file
@@ -86,7 +104,7 @@ def delete_notes_message():
     screen11.title("Notes")
     screen11.geometry("350x250")
     
-    Label(screen11, text=delete + " has been removed").pack()
+    Label(screen11, text=delete+" has been removed").pack()
 
 
 def create_secret_notes():
@@ -135,14 +153,14 @@ def view_notes():
     Label(screen9, text=data).pack()
 
 def login_verify():
-    get_username = user_verify.get().lower()
+    get_username = user_verify.get()
     get_password = pass_verify.get()
 
     list_of_files = os.listdir()
     if get_username in list_of_files:
-        file_name = str(user_verify.get())
+        file_name = str(get_username)
         print("Debug file name: " + file_name)
-        os.chdir(file_name)
+        os.chdir("./" + file_name)
         file_open = open(get_username, "r")
         verify = file_open.read().splitlines()
         if get_password in verify:
@@ -151,8 +169,6 @@ def login_verify():
             Label(screen2, text="Password Error!", fg="#E81500", font=("Lato", 12)).pack()
     else:
         Label(screen2, text="User not found!", fg="#E81500", font=("Lato", 12)).pack()
-    # TODO: When person signout of their account it needs to exit out of the folder 
-    # os.chdir("..")   
 
 
 def login_page():
@@ -243,7 +259,6 @@ def screen():
     Button(text="Login", height="1", width="25", font=("Lato", 12), command=login_page).pack()
     Label(text="").pack()
     Button(text="Register", height="1", width="25", font=("Lato", 12), command=register_page).pack()
-    
     
     main_screen.mainloop()
         
