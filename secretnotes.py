@@ -4,7 +4,6 @@ import os
 
 # Django and Flask are the most popular tools used to write an application server in Python
 # TODO: Create a random directory name? (privacy) or upload it to a vps and call request for access
-# TODO: Destroy the labels after shown for a few seconds. 
 # TODO: Save notes into directory of username.
 # TODO: If notes file already exist do not overwrite those notes. 
 # TODO: Make it so the user can not resize the UI (Done for login, register, and startup!)
@@ -13,10 +12,17 @@ import os
 # TODO: Start working on protecting the password through hashing. 
 # TODO: Add image of an eye for password viewer 
 # TODO: Do not allow certain characters to become usernames (regex), such at dotfiles
-# TODO: I should not be able to spam the register/login/save button and keep getting the label to show up. 
-# TODO: File naming system is shit I need to fix that... Sometimes it says the file_name is not defined like wtf????
-# TODO: Once I create a new file I need to somehow "refresh" the file system because it cant locate the newly made user... I have to restart the program to do that.
+# TODO: I should not be able to spam the register/login/save button and keep getting the label to show up. (Destroy the labels after shown for a few seconds. )
+# TODO: File naming system is shit I need to fix that... Sometimes it says the file_name is not defined like wtf???? --> I think this is when you register and the code cant see the filesystem updated
+# TODO: Once I create a new file I need to somehow "refresh" the file system because it cant allocate the newly made user... I have to restart the program to do that.
+# TODO: Add an options button to edit the color of the notepad or something...
+# TODO: Rounded button for the register and login
+# TODO: Only allow one instance of register screen or login screen to open 
 # Thread to run the sleep command on the text? Make it sleep? And then it disappers. Need to look more into threads. 
+
+
+def hash():
+    return
 
 def register_user():
     username_info = username.get()
@@ -26,7 +32,7 @@ def register_user():
         # TODO: Some names are not allowed to be folders because of they being characters. Also, don't allowed periods so they don't become hidden files: .gitignore
         os.makedirs(username_info)
         os.chdir(username_info)
-        
+        c
         file = open(username_info, "w")
         file.write("Username:\n")
         file.write(username_info + "\n")
@@ -34,10 +40,20 @@ def register_user():
         file.write(password_info)
         file.close()
         
-        Label(register_screen, text="Registration successful!", fg="#36BB00", font=("Lato", 12)).pack()
+        # Label(register_screen, text="Registration successful!", fg="#36BB00", font=("Lato", 12)).pack()
+        # register_screen.config(text='Registration successful!')
+        # register_screen.after(2000, lambda:register_screen.config(text=''))
+        
+        login_button_check_test = Label(register_screen, text="Registration successful!")
+        login_button_check_test.pack(fg="#36BB00", font=("Lato", 12))
+        register_screen.after(2000, register_screen.destroy)
         
     except FileExistsError:
-        Label(register_screen, text="User Already Created", fg="#F18300", font=("Lato", 12)).pack()
+        # Label(register_screen, text="User Already Created", fg="#F18300", font=("Lato", 12)).pack()
+        register_screen.config(text='User Already Created!')
+        register_screen.after(2000, lambda:register_screen.config(text=''))
+        
+        
         # TODO: Make this exception unnecessary maybe by creating the file instead of trying to chdir when its not found? 
     except FileNotFoundError:
         pass
@@ -161,7 +177,7 @@ def login_verify():
     list_of_files = os.listdir()
     if get_username in list_of_files:
         file_name = str(get_username)
-        print("Debug file name: " + file_name)
+        print("System: Debug file name " + file_name)
         os.chdir("./" + file_name)
         file_open = open(get_username, "r")
         verify = file_open.read().splitlines()
