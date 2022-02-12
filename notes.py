@@ -11,7 +11,6 @@ class Notes:
         password_info = self.password.get()
         
         try:
-            # TODO: Some names are not allowed to be folders because of they being characters. Also, don't allowed periods so they don't become hidden files: .gitignore
             os.makedirs(username_info)
             os.chdir(username_info)
             
@@ -26,8 +25,8 @@ class Notes:
             # self.register_screen.config(text='Registration successful!')
             # self.register_screen.after(2000, lambda:self.register_screen.config(text=''))
             
-            login_tk.Button_check_test = tk.Label(self.register_screen, text="Registration successful!")
-            login_tk.Button_check_test.pack(fg="#36BB00", font=("Lato", 12))
+            # login_tk.Button_check_test = tk.Label(self.register_screen, text="Registration successful!")
+            # login_tk.Button_check_test.pack(fg="#36BB00", font=("Lato", 12))
             #self.register_screen.after(2000, self.register_screen.destroy)
             
         except FileExistsError:
@@ -52,38 +51,36 @@ class Notes:
         tk.Label(self.notes_screen, text="Text File Saved", fg="#36BB00", font=("Lato", 12)).pack()
 
     def login_completed(self):
-        dashboard_screen = tk.Toplevel(self.master)
-        dashboard_screen.title("Dashboard")
-        dashboard_screen.geometry("350x250")
+        self.dashboard_screen = tk.Toplevel(self.master)
+        self.dashboard_screen.title("Dashboard")
+        self.dashboard_screen.geometry("350x250")
         
         welcome_user = self.user_verify.get()
         
-        tk.Label(dashboard_screen, text="Welcome to the dashboard " + welcome_user + "!").pack() 
-        tk.Button(dashboard_screen, text="Create secret note", command=self.create_secret_notes).pack()
-        tk.Button(dashboard_screen, text="View secret note", command=self.view_notes).pack()
-        tk.Button(dashboard_screen, text="Delete secret note", command=self.delete_notes).pack()
+        tk.Label(self.dashboard_screen, text="Welcome to the dashboard " + welcome_user + "!").pack() 
+        tk.Button(self.dashboard_screen, text="Create secret note", command=self.create_secret_notes).pack()
+        tk.Button(self.dashboard_screen, text="View secret note", command=self.view_notes).pack()
+        tk.Button(self.dashboard_screen, text="Delete secret note", command=self.delete_notes).pack()
         
-        dashboard_screen.protocol("WM_DELETE_WINDOW", self.close_gui_windows)
+        self.dashboard_screen.protocol("WM_DELETE_WINDOW", self.close_gui_windows)
 
-    # WM_DELETE_WINDOW 
-    def close_gui_windows(self):
-        if messagebox.askokcancel("Warning", "Do you want to exit dashboard?"):
+    # def close_gui_windows(self):
+    #     if messagebox.askokcancel("Warning", "Do you want to exit dashboard?"):
             # TODO: When person signout of their account it needs to exit out of the folder (testing --> not the most thought out way)
             
-            
-            # dashboard_screen.destory()
+    #         # self.dashboard_screen.destory()
             # TODO: Go back to the main directory folder. ("..") can be risky due to it being access to full location where the folder is located.
-            os.chdir("./test/")   
+    #         os.chdir("./test/")   
 
     def delete_notes(self):
         self.register_screen0 = tk.Toplevel(self.master)
         self.register_screen0.title("Delete")
         self.register_screen0.geometry("350x250")
         
-        list_all_files = os.listdir()
+        list_files = os.listdir()
         
         tk.Label(self.register_screen0, text="Choose a filename to delete: ").pack()
-        tk.Label(self.register_screen0, text=list_all_files).pack()
+        tk.Label(self.register_screen0, text=list_files).pack()
         
         self.delete_file = tk.StringVar()
         
@@ -121,10 +118,10 @@ class Notes:
         open_file_screen.title("Info")
         open_file_screen.geometry("350x250")
         
-        list_all_files = os.listdir()
+        list_files = os.listdir()
         
         tk.Label(open_file_screen, text="Choose a filename below: ").pack()
-        tk.Label(open_file_screen, text=list_all_files).pack()
+        tk.Label(open_file_screen, text=list_files).pack()
         
         self.file_name = tk.StringVar()
         

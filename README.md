@@ -24,7 +24,7 @@
 
 - [ ] I should not be able to spam the register/login/save button and keep getting the label to show up. 
 
-- [ ] File naming system is shit I need to fix that... Sometimes it says the file_name is not defined like wtf????
+- [ ] File naming system is shit I need to fix that... Sometimes it says the file_name is not defined??
 
 - [ ] Once I create a new file I need to somehow "refresh" the file system because it cant locate the newly made user... I have to restart the program to do that.
 
@@ -33,3 +33,5 @@
 - [ ] Setting button to change the color. 
 
 - [ ] Separate class that inherits from tk.Toplevel for TopLevel.
+
+- [] Some names are not allowed to be folders because of they being characters. Also, don't allowed periods so they don't become hidden files: .gitignore
