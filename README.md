@@ -34,4 +34,4 @@
 
 - [ ] Separate class that inherits from tk.Toplevel for TopLevel.
 
-- [] Some names are not allowed to be folders because of they being characters. Also, don't allowed periods so they don't become hidden files: .gitignore
+- [ ] Some names are not allowed to be folders because of they being characters. Also, don't allowed periods so they don't become hidden files: .gitignore
