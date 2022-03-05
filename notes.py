@@ -166,8 +166,8 @@ class Notes:
         eye_icon_off = tk.PhotoImage(file="./assets/images/invisible.png")
         
         # TODO: Change up the tk.Buttons to have eyes instead of a bar. 
-        tk.Button(self.login_screen, image=eye_icon_on, height="25", width="25", command=lambda: self.password_show("show_login_password")).pack()
-        tk.Button(self.login_screen, image=eye_icon_off, height="1", width="10", command=lambda: self.password_show("hide_login_password")).pack()
+        # tk.Button(self.login_screen, image=eye_icon_on, height="25", width="25", command=lambda: self.password_show("show_login_password")).pack()
+        # tk.Button(self.login_screen, image=eye_icon_off, height="1", width="10", command=lambda: self.password_show("hide_login_password")).pack()
         
         tk.Button(self.login_screen, text="Login", height="1", width="10", command=self.login_verify).pack()
 
@@ -206,8 +206,8 @@ class Notes:
         self.entry_password.config(show="*")
         
         # TODO: Change up the tk.Buttons to have eyes instead of a bar. 
-        tk.Button(self.register_screen, text="Show password!", height="1", width="12", command=lambda: self.password_show("show_register_password")).pack()
-        tk.Button(self.register_screen, text="Hide password!", height="1", width="12", command=lambda: self.password_show("hide_register_password")).pack()
+        # tk.Button(self.register_screen, text="Show password!", height="1", width="12", command=lambda: self.password_show("show_register_password")).pack()
+        # tk.Button(self.register_screen, text="Hide password!", height="1", width="12", command=lambda: self.password_show("hide_register_password")).pack()
         tk.Button(self.register_screen, text="Register", height="1", width="10", command=self.register_user).pack()
 
         
