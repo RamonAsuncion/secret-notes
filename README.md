@@ -4,7 +4,7 @@
 
 - [ ] Create a random directory name? (privacy) or upload it to a vps and call request for access (Hashing)
 
-- [ ] Destroy the labels after shown for a few seconds. 
+- [ ] Destroy the labels after shown for a few seconds.
 
 - [ ] Save notes into directory of username.
 
@@ -35,3 +35,5 @@
 - [ ] Separate class that inherits from tk.Toplevel for TopLevel.
 
 - [ ] Some names are not allowed to be folders because of they being characters. Also, don't allowed periods so they don't become hidden files: .gitignore
+
+- [ ] It's possible to remove the username/password file from the database. It breaks the login button.
