@@ -1,7 +1,7 @@
-from email.mime import image
 import os
 import tkinter as tk
-from tkinter import messagebox
+from PIL import ImageTk, Image
+
 class Notes:
     def __init__( self, master=None ):
         self.master = master
@@ -11,7 +11,7 @@ class Notes:
         password_info = self.password.get()
         
         try:
-            os.makedirs(username_info)
+            os.makedirs("./test/" + username_info)
             os.chdir(username_info)
             
             file = open(username_info, "w")
@@ -21,7 +21,7 @@ class Notes:
             file.write(password_info)
             file.close()
         except FileExistsError:
-            self.register_screen.config(text='User Already Created!')
+            self.register_screen.config(text='Username already taken!')
             
         self.entry_username.delete(0, tk.END)
         self.entry_password.delete(0, tk.END)
@@ -47,7 +47,6 @@ class Notes:
         tk.Button(self.dashboard_screen, text="Create secret note", command=self.create_secret_notes).pack()
         tk.Button(self.dashboard_screen, text="View secret note", command=self.view_notes).pack()
         tk.Button(self.dashboard_screen, text="Delete secret note", command=self.delete_notes).pack()
-        
 
     def delete_notes( self ):
         self.register_screen0 = tk.Toplevel(self.master)
@@ -64,7 +63,6 @@ class Notes:
         tk.Entry(self.register_screen0, textvariable=self.delete_file).pack()
         tk.Button(self.register_screen0, command=self.delete_notes_message, text="OK").pack()
 
-
     def delete_notes_message( self ):
         delete = self.delete_file.get()
         os.remove(delete)
@@ -75,10 +73,9 @@ class Notes:
         
         tk.Label(self.register_screen1, text=delete+" has been removed").pack()
 
-
     def create_secret_notes( self ):        
         self.file_name = tk.StringVar()
-        create_notes = tk.StringVar()
+        self.create_notes = tk.StringVar()
         
         self.notes_screen = tk.Toplevel(self.master)
         self.notes_screen.title("Make Notes")
@@ -87,7 +84,7 @@ class Notes:
         tk.Label(self.notes_screen, text="Enter a filename: ").pack()
         tk.Entry(self.notes_screen, textvariable=self.file_name).pack()
         tk.Label(self.notes_screen, text="Enter secret notes: ").pack()
-        tk.Entry(self.notes_screen, textvariable=create_notes).pack()
+        tk.Entry(self.notes_screen, textvariable=self.create_notes).pack()
         tk.Button(self.notes_screen, text="Save", command=self.save_file).pack()
 
     def choose_files( self ):
@@ -119,14 +116,14 @@ class Notes:
         get_username = self.user_verify.get()
         get_password = self.pass_verify.get()
 
-        list_of_files = os.listdir("./test/")
+        print("Current directory " + os.getcwd())
+        list_of_files = os.listdir("./test/" + get_username)
         if get_username in list_of_files:
             self.file_name = str(get_username)
             
             # TODO: Remove after debugging is finished. 
             print("System: Debug file name " + self.file_name)
             
-            # TODO: Files not saving in test.
             os.chdir("./test/" + self.file_name)
             
             file_open = open(get_username, "r")
@@ -137,7 +134,6 @@ class Notes:
                 tk.Label(self.login_screen, text="Password Error!", fg="#E81500", font=("Lato", 12)).pack()
         else:
             tk.Label(self.login_screen, text="User not found!", fg="#E81500", font=("Lato", 12)).pack()
-
 
     def login_page( self ):
         self.login_screen = tk.Toplevel(self.master)
@@ -223,7 +219,17 @@ class Notes:
         tk.Label(text="").pack()
         tk.Button(text="Register", height="1", width="25", font=("Lato", 12), command=self.register_page).pack()
         
+        # TODO: Add setting button to the main screen. 
+        image = Image.open('./assets/images/settings.png')
+        my_img = ImageTk.PhotoImage(image.resize((30, 30)))
+        setting = tk.Button(self.master, image = my_img, relief=tk.FLAT, command=self.change_color)
+        setting.place(x=300, y=0)
+    
         self.master.mainloop()
+        
+    # TODO: Add settings to the main screen for color and transparency. 
+    def change_color( self ) :
+        print("Debug: Change color")
             
             
 if __name__ == '__main__':
