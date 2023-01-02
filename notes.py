@@ -1,159 +1,368 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 import tkinter as tk
+from tkinter import ttk
 import sqlite3
 import hashlib
 import uuid
 import datetime
-import re
+from PIL import Image, ImageTk
+from typing import Literal
+
+# FIXME: I need type hints `variable_name: int`.
 
 class Window:
-    def __init__(self):
-        self.register_screen = None
-        self.login_screen = None
-        self.notes_screen = None
+    """A class for managing windows that are used throughout different classes"""
+    __instance = None # Store the instance of the class once instantiated.
+
+    @classmethod
+    def get_instance(cls):
+        """ Class method that returns the singleton instance of Window class.
+        If instance is not created, it creates one.
+
+        :param cls: a reference to the class.
+        :return: None
+        """
+        if not cls.__instance:
+            Window()
+        return cls.__instance
+
+    def __init__(self) -> None:
+        """Creates a new instance of Window class and assigns it to Window.__instance
+           and creates attributes for register_screen, login_screen, and notes_screen.
+
+           :return: None
+        """
+        if Window.__instance is None:
+            Window.__instance = self
+            self.register_screen: tk.Toplevel | None = None
+            self.login_screen: tk.Toplevel | None = None
+            self.notes_screen: tk.Toplevel | None = None
+
+class PromptUserInputs:
+    """Provide response to the user"""
+
+    def __init__(self) -> None:
+         # A instance of the window management class.
+        self.window: Window = Window.get_instance()
+
+    @staticmethod
+    def create_label(text: str, color: str, window, pack: bool = False) -> None:
+        """Helper method to create a label that get's destroyed after a default of 1.5 second.
+
+        :param str text: The text for the label.
+        :param str color: The color of the label in hex.
+        :param Entry window: The window the label will be created in.
+        :param bool pack: Optional, determines if the label should be packed or gridded (defaults to False).
+        :return: None
+        """
+        label: tk.Label = tk.Label(window, text=text, fg=color, font=("Arial", 12), width=25)
+        label.after(1500, label.destroy)
+        label.pack() if pack else label.grid(row=8, column=1)
+
+    def prompt_user(self, option: str) -> None:
+        """Prompt the user with prompts based on actions
+
+        :param str option: The option to prompt the user with, should be one of the following:
+            - 'fail-login'
+            - 'user-taken'
+            - 'registered'
+            - 'notes-saved'
+            - 'bad-password'
+        :return: None
+        """
+        if option == 'fail-login':
+            self.create_label("Please check login details.", "#E81500", self.window.login_screen)
+        elif option == 'user-taken':
+            self.create_label("Username taken.", "#E81500", self.window.register_screen)
+        elif option == 'registered':
+            self.create_label("Successfully registered.", "#36BB00", self.window.register_screen)
+        elif option == 'notes-saved':
+            self.create_label("Text File Saved.", "#36BB00", self.window.notes_screen, pack=True)
+        elif option == 'bad-password':
+            # Create a new top-level window.
+            pass_req = tk.Toplevel()
+            pass_req.title("Password Requirement")
+            pass_req.geometry("300x150")
+            pass_req.resizable(False, False)
+
+            # Create a list of requirements for a strong password.
+            requirements = [
+                "Password is at least 8 characters long.",
+                "Username is not in the password",
+                "Password contains at least one number.",
+                "Password contains at least one letter.",
+                "Password contains at least one symbol.",
+                "Password is not a common word."
+            ]
+
+            # Create a listbox widget to display the requirements.
+            len_max = 0
+            listbox = tk.Listbox(pass_req)
+            for i in range(1, len(requirements)):
+                current_requirement = requirements[i]
+                if len(current_requirement) > len_max:
+                    len_max = len(current_requirement)
+                listbox.insert(i, f"{i}. {current_requirement}")
+
+            # Configure the list-box's width and background.
+            listbox.configure(width=len_max, background="#333333")
+            listbox.pack()
+
+            # Destroy the window after 7.5 seconds.
+            pass_req.after(7500, pass_req.destroy)
+
+            # Create an extra label on the window to make user aware password does not meet requirements.
+            self.create_label("Password does not meet \n minimum requirement.", "#E81500", self.window.register_screen)
 
 class Interface(tk.Frame):
-    def __init__(self):
-        """ Initialize the interface components of the application. """
-        super().__init__()
-        self.account_management = AccountManagement()
+    """ A class for managing the graphical user interface."""
 
-        # Close the database on close of the application.
-        self.master.protocol("WM_DELETE_WINDOW", self.account_management.close_connection)
+    def __init__(self, parent, *args, **kwargs) -> None:
+        """Initialize the interface components of the application.
 
-    def main_screen(self):
-        """ Creates the interface for the main screen """
-        self.master.title("Secret Notes")
-        self.master.geometry("350x250")
+        :return: None
+        """
+        tk.Frame.__init__(self, parent, *args, **kwargs)
+        self.parent = parent
 
-        # Provide the login and register button to the user on the main page.
-        tk.Label(text="Secret Notes", bg="#4BA400", fg="#FFFFFF", width="300", height="2", font=("Arial", 14)).pack()
+        # Variables related to the login form.
+        self.entry_username: tk.Entry | None = None
+        self.entry_password: tk.Entry | None = None
+        self.password_viewer: tk.Button | None = None
+
+        # A instance of the window management class.
+        self.window: Window = Window.get_instance()
+
+        # A reference to the password viewer image.
+        self.photo_image: tk.PhotoImage = self.update_password_image()
+
+        # Setup the main window.
+        self.main_screen()
+
+    def main_screen(self) -> None:
+        """Creates the interface for the main screen
+
+        :return: None
+        """
+        self.parent.title("Secret Notes")
+        self.parent.geometry("350x250")
+
+        # Title.
+        tk.Label(text="Secret Notes", bg="#4BA400", fg="#FFFFFF", width="300",
+                 height="2", font=("Arial", 14)).pack()
         tk.Label(text="").pack()
-        tk.Button(text="Login", height="1", width="25", font=("Arial", 12), command=self.login_page).pack()
+
+        # Login button.
+        tk.Button(text="Login", height="1", width="25", font=("Arial", 12),
+                  command=self.login_page).pack()
         tk.Label(text="").pack()
-        tk.Button(text="Register", height="1", width="25", font=("Arial", 12), command=self.register_page).pack()
 
-    def register_page(self):
-        """ Creates the interface for the registration screen """
-        Window.register_screen = tk.Toplevel()
-        Window.register_screen.title("Register")
-        Window.register_screen.geometry("350x250")
+        # Register button.
+        tk.Button(text="Register", height="1", width="25", font=("Arial", 12),
+                  command=self.register_page).pack()
 
-        self.username = tk.StringVar()
-        self.password = tk.StringVar()
+    def register_page(self) -> None:
+        """Creates the interface for the registration screen
 
-        tk.Label(Window.register_screen, text="Please enter your details").pack()
-        tk.Label(Window.register_screen, text="").pack()
+        :return: None
+        """
+        self.window.register_screen: tk.Toplevel = tk.Toplevel()
+        self.close_window(self.window.login_screen)
+        self.create_page(self.window.register_screen, login_screen=False)
 
-        tk.Label(Window.register_screen, text="Username").pack()
-        self.entry_username = tk.Entry(Window.register_screen, textvariable=self.username)
-        self.entry_username.pack()
+    def login_page(self) -> None:
+        """Creates the interface for the login screen
 
-        tk.Label(Window.register_screen, text="Password").pack()
-        self.entry_password = tk.Entry(Window.register_screen, textvariable=self.password)
-        self.entry_password.pack()
+        :return: None
+        """
+        self.window.login_screen: tk.Toplevel = tk.Toplevel()
+        self.close_window(self.window.register_screen)
+        self.create_page(self.window.login_screen)
 
-        tk.Label(Window.register_screen, text="").pack()
-        self.entry_password.config(show="*")
+    @staticmethod
+    def close_window(window) -> None:
+        """ Close a specific window.
 
-        #TODO: Clear the register password text.
+        :param Toplevel window: tkinter toplevel window object
+        :return: None
+        """
+        if window is None:
+            return
+        window.destroy()
 
-        tk.Button(Window.register_screen, text="Register", height="1", width="10", command=self.send_credentials).pack()
+    def create_page(self, window, login_screen: bool = True) -> None:
+        """Creates a user interface for entry based on the screen type
 
-    def login_page(self):
-        """ Creates the interface for the login screen """
+        :param Toplevel window: tkinter toplevel window object
+        :param bool login_screen: determine whether it is a login screen or not (Default value = True)
+        :return: None
+        """
+        # Check if the current window is a login or registration screen.
+        if login_screen:
+            entry_point = "Login"
+        else:
+            entry_point = "Registration"
+
         # Creates the window for the login screen.
-        Window.login_screen = tk.Toplevel()
-        Window.login_screen.title("Login")
-        Window.login_screen.geometry("350x250")
+        window.title(entry_point)
+        window.geometry("350x250")
 
-        tk.Label(Window.login_screen, text="Please enter your login details").pack()
-        tk.Label(Window.login_screen, text="").pack()
+        # Configure the width of the columns.
+        window.columnconfigure(0, weight=2)
+        window.columnconfigure(3, weight=1)
 
-        self.username = tk.StringVar()
-        self.password = tk.StringVar()
+        # The header for the current window.
+        header = tk.Label(window, text=f"Enter your {entry_point.lower()} details:")
+        header.grid(row=0, column=1)
+        tk.Label(window, text="").grid(row=1, column=1)
 
-        tk.Label(Window.login_screen, text="Username").pack()
-        self.entry_username = tk.Entry(Window.login_screen, textvariable=self.username)
-        self.entry_username.pack()
+        # Instantiate StringVar objects to handle the username and password of the entries.
+        username: tk.StringVar = tk.StringVar()
+        password: tk.StringVar = tk.StringVar()
 
-        tk.Label(Window.login_screen, text="Password").pack()
-        self.entry_password = tk.Entry(Window.login_screen, textvariable=self.password)
-        self.entry_password.pack()
+        # Create a username entry for the user to interact.
+        tk.Label(window, text="Username").grid(row=2, column=1)
+        self.entry_username: tk.Entry | None = tk.Entry(window, textvariable=username)
+        self.entry_username.grid(row=3, column=1, sticky="news")
 
-        tk.Label(Window.login_screen, text="").pack()
-        self.entry_password.config(show="*")
+        # Create a password entry for the user to interact.
+        tk.Label(window, text="Password").grid(row=4, column=1)
+        bullet = "\u2022"  # Specifies bullet character.
+        self.entry_password: tk.Entry | None = tk.Entry(window, show=bullet, textvariable=password)
+        self.entry_password.grid(row=5, column=1, sticky="news")
 
-        #TODO: Clear the login text.
+        # Create a password viewer button to show and hide the password on the password entry.
+        self.password_viewer: tk.Button | None = tk.Button(window, bg="#333333", image=self.photo_image,
+                                                    command=lambda: self.password_show(self.entry_password))
+        self.password_viewer.grid(row=5, column=2, sticky="we")
 
-        tk.Button(Window.login_screen, text="Login", height="1", width="10", command=lambda: self.send_credentials(login_flag=True)).pack()
+        # Submit button to send the credentials the account management class.
+        tk.Label(window, text="").grid(row=6, column=1)
 
-    def send_credentials(self, login_flag=False):
-        """ Sends user information to the account management system """
-        self.account_management.receive_credentials(username=self.username.get(), password=self.password.get(), login_flag=login_flag)
+        submit_button: tk.Button = tk.Button(window, text="Submit", height="1", width="10",
+                                  command=lambda: self.send_credentials(username.get(), password.get(), login_screen))
 
-        # # FIXME: There is no show password button.
-    # def password_show(self, button_click):
-    #     if button_click == "show_login_password":
-    #         self.entry_password.config(show="")
-    #     elif button_click == "hide_login_password":
-    #         self.entry_password.config(show="*")
-    #     elif button_click == "show_register_password":
-    #         self.entry_password.config(show="")
-    #     else:
-    #         self.entry_password.config(show="*")
+        # Allow the user to press enter on the password entry to submit.
+        self.entry_password.bind("<Return>", lambda _:
+            self.send_credentials(username.get(), password.get(), login_screen))
+
+        submit_button.grid(row=7, column=1)
+
+    def send_credentials(self, username: str, password: str, login_flag: bool) -> None:
+        """Sends user information to the account management system
+
+        :param str password: the user submitted password.
+        :param str username: the user submitted username.
+        :param bool login_flag: whether the window is the login or registration page.
+        :return: None
+        """
+        # Send the credentials.
+        AccountManagement().receive_credentials(username, password, login_flag)
+
+        # Delete the username and password on the entry box once submitted.
+        if self.entry_password and self.entry_password:
+            self.entry_username.delete(0, tk.END)
+            self.entry_password.delete(0, tk.END)
+
+    def password_show(self, entry_password: tk.Button) -> None:
+        """Show to users password
+
+        :param str entry_password: an entry box specifically for a password that has
+            been configured with the bullet character (\u2022).
+        :return: None
+        """
+        bullet: str = "\u2022"
+        if entry_password.cget('show') == bullet:
+            entry_password.config(show='')
+            view = "hide"
+        else:
+            entry_password.config(show=bullet)
+            view = "view"
+
+        # Update the image of the password viewer icon.
+        self.photo_image = self.update_password_image(view) # FIXME: "already assigned went away when I removed the type annotation"
+        self.password_viewer.configure(image=self.photo_image)
 
     @staticmethod
-    def create_label(text, color, font, window, time=1000):
-        """ Helper method to create a label that get's destroyed after a second. """
-        label = tk.Label(window, text=text, fg=color, font=font)
-        label.after(time, label.destroy)
-        label.pack()
+    def update_password_image(option: str = "view") -> ImageTk.PhotoImage:
+        """This function loads an image from the assets folder and resizes
+        it to a specified width and height before returning it as a tkinter PhotoImage.
 
-    @staticmethod
-    def prompt_user(option):
-        """ Prompt the user with prompts based on actions """
-        if option == 'fail-login':
-            Interface.create_label("Please check login details.", "#E81500", ("Arial", 12), Window.login_screen)
-        elif option == 'user-taken':
-            Interface.create_label("Username taken.", "#E81500", ("Arial", 12), Window.register_screen)
-        elif option == 'registered':
-            Interface.create_label("Successfully registered.", "#36BB00", ("Arial", 12), Window.register_screen)
-        elif option == 'notes-saved':
-            Interface.create_label("Text File Saved.", "#36BB00", ("Arial", 12), Window.notes_screen)
-        elif option == 'bad-password':
-            Interface.create_label("Your password should be at least 8 characters long, \n contain a combination of letters, numbers, and symbols, \n and should not include any personal information or common phrases.", "#E81500", ("Arial", 12), Window.register_screen, time=5000)
-
+        :param str option: is a string that specifies whether the user wishes to view or hide the password
+            (Default value = "view")
+            - 'view'
+            - 'hide'
+        :return: PhotoImage: the new image.
+        """
+        image_name: Literal['invisible', 'view'] = "invisible" if option == "hide" else "view"
+        img: Image = Image.open(f'assets/images/{image_name}.png').resize((20, 20))
+        return ImageTk.PhotoImage(img)
 
 class AccountManagement(tk.Frame):
-    def __init__(self):
-        super().__init__()
-        self.connect_to_database = sqlite3.connect("user-data.db")
-        self.cursor = self.connect_to_database.cursor()
-        self.create_database() # Construct the data base.
+    """ A class for managing user account data stored in a database. """
 
-    def create_database(self):
-        """ Creates a SQL database to store the user data. """
+    def __init__(self) -> None:
+        """Initialize the account management system of the application.
+
+        :return: None
+        """
+        super().__init__()
+
+        # Variables related to the users login detail.
+        self.username: str | None = None
+        self.password: str | None = None
+
+        # The creation of the account database.
+        self.connect_to_database: sqlite3.Connection = sqlite3.connect("user-data.db")
+        self.cursor: sqlite3.Cursor = self.connect_to_database.cursor()
+        self.create_database()  # Construct the database.
+
+        self.interface = PromptUserInputs()
+
+        # FIXME: DEBUG
+        # Close the database on close of the application.
+        # self.parent.protocol("WM_DELETE_WINDOW",
+        #                      self.close_connection)
+
+    def create_database(self) -> None:
+        """Creates a SQL database to store the user data.
+
+        :return: None
+        """
         # Check the table has been created.
         self.cursor.execute(f"PRAGMA table_info(accounts)")
         rows = self.cursor.fetchall()
 
         # Create the table if it is an empty database.
         if len(rows) <= 0:
-            self.cursor.execute("CREATE TABLE accounts (username TEXT, password TEXT, uuid TEXT)")
-            self.cursor.execute("CREATE TABLE notes (uuid TEXT, content TEXT, date DATETIME)")
+            self.cursor.execute('CREATE TABLE accounts (username TEXT, password TEXT, uuid TEXT)')
+            self.cursor.execute('CREATE TABLE notes (uuid TEXT, content TEXT, date DATETIME)')
 
-    def receive_credentials(self, password, username, login_flag):
-        """ Retrieve the user data from the text boxes. """
-        self.username = username.lower()
-        self.password = password
+    def receive_credentials(self, username: str, password: str, login_flag: bool) -> None:
+        """Retrieve the user data from the text boxes.
+
+        :param str password: the user submitted password.
+        :param str username: the user submitted username.
+        :param bool login_flag: whether the user is submitting the password through the login
+            or registration page.
+        :return: None
+        """
+        self.username: str = username.lower()
+        self.password: str = password
 
         if login_flag:
             self.login_verify(self.username, self.password)
         else:
             self.register_user()
 
-    def user_exist(self, username):
-        """ Check is the username is already taken. """
+    def user_exist(self, username: str) -> bool:
+        """Check is the username is already taken.
+
+        :param str username: the user submitted username.
+        :return: bool: a boolean indicating if the user already exists.
+        """
         search_query = "SELECT * FROM accounts WHERE username = ?"
         self.cursor.execute(search_query, (username.lower(),))
         # Check if user already exist in the database.
@@ -161,17 +370,22 @@ class AccountManagement(tk.Frame):
             return True
         return False
 
-    def check_password(self, password):
-        """
-        Check if the users password has a minimum of 8 characters, 
+    def check_password(self, password: str) -> bool:
+        """Check if the users password has a minimum of 8 characters,
         combination of letters, numbers and symbols, no personal information,
         amd common phrases.
+
+        :param str password: the password to be evaluated.
+        :return: bool: a boolean indicating if the password meets the
+            minimum requirements.
         """
-        
+        if password is None:
+            raise ValueError('Password cannot be None.')
+
         # Read in the common_words file:
         with open('common_words.txt', 'r') as f:
             common_words = f.read().splitlines()
-        
+
         # Check if the password is at least 8 characters long.
         if len(password) < 8:
             return False
@@ -192,45 +406,61 @@ class AccountManagement(tk.Frame):
             return False
         # If all checks pass, return True
         else:
-            return True        
+            return True
 
-    def register_user(self):
-        """ Check if the user meets the requirements. """
-        # Check if the username does not exist 
-        if not self.user_exist(self.username): 
+    def register_user(self) -> None:
+        """Check if the user meets the requirements.
+
+        :return: None
+        """
+        # Check if the username does not exist
+        if not self.user_exist(self.username):
+
             # Check if the password meets the criteria.
             if self.check_password(self.password):
                 # Add the user to the database
-                self.add_to_database()    
+                self.add_to_database()
             else:
                 # Respond with a prompt on meeting the criteria.
-                Interface.prompt_user("bad-password")  
+                self.interface.prompt_user("bad-password")
         else:
             # Respond with a prompt on already being a user.
-            Interface.prompt_user('user-taken')      
+            self.interface.prompt_user('user-taken')
 
-    def add_to_database(self):
-        """ Register the new user into the database. """
+    def add_to_database(self) -> None:
+        """Register the new user into the database.
+
+        :return: None
+        """
         hashed_password = self.hash_password(self.password)
         insert_query = "INSERT INTO accounts (username, password, uuid) VALUES (?, ?, ?)"
         self.cursor.execute(insert_query, (self.username, hashed_password, str(uuid.uuid4())))
         self.connect_to_database.commit()
-        Interface.prompt_user('registered')
+        self.interface.prompt_user('registered')
 
-    def login_verify(self, username, password):
-        """ Verify the user data to proceed with login. """
+    def login_verify(self, username: str, password: str) -> None:
+        """Verify the user data to proceed with login.
+
+        :param str username: the user submitted username.
+        :param str password: the user submitted password.
+        :return: None
+        """
+        # Compare the submitted data to the database.
         hashed_password = self.hash_password(password)
         select_query = "SELECT * FROM accounts WHERE username = ? AND password = ?"
         self.cursor.execute(select_query, (username, hashed_password))
         result = self.cursor.fetchone()
 
-        if result:
-            self.dashboard()
-        else:
-            Interface.prompt_user('fail-login')
+        # Proceed to the dashboard if the login was successful.
+        self.dashboard() if result else self.interface.prompt_user('fail-login')
 
-    def hash_password(self, password):
-        """ Hash the users password. """
+    @staticmethod
+    def hash_password(password: str) -> str:
+        """Hash the users password.
+
+        :param str password: the user submitted password.
+        :return: str: the hashed form of the password.
+        """
         # Use the SHA-256 algorithm to generate a cryptographic hash
         hash_object = hashlib.sha256(password.encode())
 
@@ -238,107 +468,224 @@ class AccountManagement(tk.Frame):
         return hash_object.hexdigest()
 
     def close_connection(self):
-        """ Close the application and the database. """
+        """Close the application and the database."""
         self.connect_to_database.close()
-        self.master.destroy()
+        self.parent.destroy()
 
-    def access_uuid(self, username: str) -> str: #TODO: type hinting?
-        """ Access the users UUID. """
+    def access_uuid(self, username: str | None) -> str:
+        """Access the users UUID.
+
+        :param str username: the user submitted username.
+        :return: str: the user's UUID.
+        """
+        if username is None:
+            raise ValueError("Username cannot be None.")
+
         select_query = "SELECT uuid FROM accounts WHERE username = ?"
         self.cursor.execute(select_query, (username,))
-        uuid_id = self.cursor.fetchone()
+        uuid_id: tuple = self.cursor.fetchone()
         return uuid_id[0]
 
-    def dashboard(self):
-        """ Users dashboard. """
-        note_management = NotesManagement()
+    def dashboard(self) -> None:
+        """Users dashboard.
+
+        :return: None
+        """
+        note_management = NoteManagement()
 
         dashboard_screen = tk.Toplevel()
         dashboard_screen.title("Dashboard")
         dashboard_screen.geometry("350x250")
-        
-        # Send the UUID of the logged in user to the notes management.
+
+        # Send the UUID of the logged-in user to the note management.
         note_management.retrieve_uuid_id(self.access_uuid(self.username))
 
+        # Display different options to the user on how to manage their notes.
         tk.Label(dashboard_screen, text=f"Greetings, {self.username.capitalize()}!").pack()
         tk.Button(dashboard_screen, text="Create secret note", command=note_management.create_secret_notes).pack()
         tk.Button(dashboard_screen, text="View secret note", command=note_management.view_notes).pack()
-        tk.Button(dashboard_screen, text="Delete secret note", command=note_management.delete_notes).pack()
+        tk.Button(dashboard_screen, text="Delete secret note", command=note_management.view_delete_notes).pack()
 
-class NotesManagement(tk.Frame):
-    def __init__(self):
+
+class NoteManagement(tk.Frame):
+    """ A class for managing notes stored in a database. """
+
+    def __init__(self) -> None:
+        """Initialize the note management components of the application.
+
+        :return: None
+        """
         super().__init__()
         self.connect_to_database = sqlite3.connect("user-data.db")
         self.cursor = self.connect_to_database.cursor()
+        self.window = Window.get_instance()
 
-    def retrieve_uuid_id(self, uuid):
-        """ Get the user UUID. """
+    def retrieve_uuid_id(self, uuid: str) -> None:
+        """Get the user UUID.
+
+        :param uuid: the user's UUID.
+        :return: None
+        """
         self.uuid_id = uuid
 
-    def delete_notes(self):
-        self.note = tk.Toplevel()
-        self.note.title("Delete")
-        self.note.geometry("350x250")
+    def view_delete_notes(self) -> None:
+        """View the set of notes scheduled to be deleted in a tree view.
 
-    def delete_notes_message(self):
-        pass
+        :return: None
+        """
+        # Create the window.
+        delete_note_screen = tk.Toplevel()
+        delete_note_screen.title("Delete")
+        delete_note_screen.geometry("350x250")
 
-    def view_notes(self):
-        """ View all the notes. """
+        # Change the style of the table.
+        ttk.Style().configure("Treeview", background="#333333",
+                              foreground="white", fieldbackground="333333")
+
+        # Create a treeview with 2 columns
+        tree = ttk.Treeview(delete_note_screen, columns=("note", "date"), show="headings")
+
+        # Create the Scrollbar widget
+        scrollbar = ttk.Scrollbar(delete_note_screen, orient=tk.VERTICAL, command=tree.yview)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+        # Set the yscrollcommand of the Treeview widget to the Scrollbar set.
+        tree.configure(yscrollcommand=scrollbar.set)
+
+        # Set the column width
+        tree.column("date", width=50)
+
+        # Set column headings
+        tree.heading("note", text="Note")
+        tree.heading("date", text="Date")
+
+        # Create a query to select all notes from the database
+        select_query = "SELECT content, date FROM notes"
+
+        # Execute the query and select the results
+        self.cursor.execute(select_query)
+        rows = self.cursor.fetchall()
+
+        # Insert the results into the treeview
+        for row in rows:
+            tree.insert('', tk.END, values=row)
+
+        # Set the treeview
+        tree.pack(expand=tk.YES, fill=tk.BOTH)
+
+        # Button to delete the selected content.
+        delete_button = tk.Button(delete_note_screen, text="Delete",
+                                  command=lambda: self.delete_note(tree))
+        delete_button.pack(side=tk.BOTTOM)
+
+    def delete_note(self, current_tree: ttk.Treeview) -> None:
+        """Delete a note from a database based on a treeview selection.
+
+        :param current_tree: A reference to the treeview widget.
+        :return: None
+        """
+        # Check if a row is selected.
+        if not current_tree.selection(): return
+
+        # Get the selected item
+        selected_item = current_tree.selection()[0]
+
+        # Get the item's value
+        item_value = current_tree.item(selected_item)['values']
+
+        # Get the note content
+        note = item_value[0]
+
+        # Execute to delete query based on the note content
+        delete_query = "DELETE FROM notes WHERE content = ?"
+        self.cursor.execute(delete_query, (note,))
+        self.connect_to_database.commit()
+
+        # Refresh the treeview
+        current_tree.delete(selected_item)
+
+    def view_notes(self) -> None:
+        """View all the notes.
+
+        :return: None
+        """
         read_file_screen = tk.Toplevel()
         read_file_screen.title("Notes")
         read_file_screen.geometry("350x250")
         select_query = "SELECT content, date FROM notes WHERE uuid = ?"
-        self.cursor.execute(select_query, (self.uuid_id, ))
-        results = self.cursor.fetchall() 
+        self.cursor.execute(select_query, (self.uuid_id,))
+        results = self.cursor.fetchall()
 
+        # TODO: Make this into a tree view.
         if results:
             count = 1
             for row in results:
-                row = f"------Note: {count}------- \n {row[0]}, {row[1]}"
-                tk.Label(read_file_screen, text=row, font=("arial", 15)).pack()
-                count+=1
+                message = f"{row[0]}, {row[1]} \n"
+                tk.Label(read_file_screen, text=message, font=("arial", 15)).pack()
+                count += 1
         else:
             tk.Label(read_file_screen, text="No data.", font=("arial", 15)).pack()
 
-    def save_text(self, notes): # TODO: Encrypt the user notes with AES.
-        """ Save the newly created notes. """
+    def save_text(self, notes: str) -> None:
+        """Save the newly created notes.
+
+        :param str notes:
+        :return: None
+        """
         insert_query = "INSERT INTO notes (uuid, content, date) VALUES (?, ?, ?)"
         date_time = datetime.datetime.now()
         self.cursor.execute(insert_query, (self.uuid_id, notes, date_time.strftime("%x")))
         self.connect_to_database.commit()
 
         # Confirm to the user that the data was saved successfully.
-        Interface.prompt_user('notes-saved')
+        self.interface.prompt_user('notes-saved')
 
-    def create_secret_notes(self):
-        """ Creates a new note. """
+    def create_secret_notes(self) -> None:
+        """Creates a new note.
+
+        :return: None
+        """
         # Create the window for the creation of notes.
-        Window.notes_screen = tk.Toplevel()
-        Window.notes_screen.title("Make Notes")
-        Window.notes_screen.geometry("350x250")
+        self.window.notes_screen = tk.Toplevel()
+        self.window.notes_screen.title("Make Notes")
+        self.window.notes_screen.geometry("350x250")
 
         # Create the text box for the user to write.
-        tk.Label(Window.notes_screen, text="Enter secret notes: ").pack()
-        text_box = tk.Text(Window.notes_screen, width=30, height=10)
-        text_box.insert(tk.END, "Enter your notes here!") #FIXME: Remote this text box on click.
+        tk.Label(self.window.notes_screen, text="Enter secret notes: ").pack()
+        text_box = tk.Text(self.window.notes_screen, width=30, height=10)
+        text_box.insert(tk.END, "Enter your notes here!")
         text_box.config(state=tk.NORMAL)
         text_box.pack(expand=False)
-        
+
+        # Clear the text box once clicked.
+        text_box.bind("<Button-1>", lambda _: self.clear_text(text_box))
+        text_box.focus_set()
+
         # Save the text.
-        tk.Button(Window.notes_screen, text="Save", command=lambda: self.save_text(text_box.get("1.0", "end-1c"))).pack()
+        tk.Button(self.window.notes_screen, text="Save", command=lambda: self.save_text(text_box.get("1.0", "end-1c"))).pack()
+
+    @staticmethod
+    def clear_text(entry) -> None:
+        """ Clears the text off an entry.
+
+        :param Text entry: the text in a text box to be deleted.
+        :return: None
+        """
+        entry.delete('1.0', tk.END)
+
 
 class MainApplication(tk.Frame):
+    """ Initialize all the components to the secret note app. """
+
     def __init__(self, parent, *args, **kwargs):
         tk.Frame.__init__(self, parent, *args, **kwargs)
-
-        self.interface = Interface()
-        self.notes_management = NotesManagement()
+        self.interface = Interface(parent)
         self.account_management = AccountManagement()
-        self.interface.main_screen()
+        self.note_management = NoteManagement()
+
 
 if __name__ == '__main__':
     root = tk.Tk()
-    application = MainApplication(root)
-    application.pack(fill="both", expand=True)
+    MainApplication(root).pack(side="top", fill="both", expand=True)
     root.mainloop()
+
