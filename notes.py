@@ -12,9 +12,24 @@ import datetime
 from PIL import Image, ImageTk
 from typing import Literal
 
+
+class Setting:
+    """A class for managing the settings of the application."""
+
+    # Change the color of the main screen window.
+    def __init__(self) -> None:
+        pass
+
+    def change_color(self):
+        """ Change the color of the main screen window. """
+        return
+
+
 class Window:
-    """A class for managing windows that are used throughout different classes"""
-    __instance: Window | None = None # Store the instance of the class once instantiated.
+    """A class for managing windows that are used throughout the program."""
+
+    # Store the instance of the class once instantiated.
+    __instance: Window | None = None
 
     @classmethod
     def get_instance(cls: Window) -> Window:
@@ -29,9 +44,9 @@ class Window:
 
     def __init__(self) -> None:
         """Creates a new instance of Window class and assigns it to Window.__instance
-            and creates attributes for register_screen, login_screen, and notes_screen.
-            
-            :return: None
+        and creates attributes for register_screen, login_screen, and notes_screen.
+
+        :return: None
         """
         if Window.__instance is None:
             Window.__instance = self
@@ -40,6 +55,7 @@ class Window:
             self.notes_screen: tk.Toplevel | None = None
         else:
             raise Exception("ERROR: This class is a singleton!")
+
 
 class PromptUserInputs:
     """Provide response to the user"""
@@ -58,7 +74,8 @@ class PromptUserInputs:
         :param bool pack: Optional, determines if the label should be packed or gridded (defaults to False).
         :return: None
         """
-        label: tk.Label = tk.Label(window, text=text, fg=color, font=("Arial", 12), width=25)
+        label: tk.Label = tk.Label(
+            window, text=text, fg=color, font=("Arial", 12), width=25)
         label.after(1500, label.destroy)
         label.pack() if pack else label.grid(row=8, column=1)
 
@@ -75,13 +92,17 @@ class PromptUserInputs:
         :return: None
         """
         if option == 'fail-login':
-            self.create_label("Please check login details.", "#E81500", self.window.login_screen)
+            self.create_label("Please check login details.",
+                              "#E81500", self.window.login_screen)
         elif option == 'user-taken':
-            self.create_label("Username taken.", "#E81500", self.window.register_screen)
+            self.create_label("Username taken.", "#E81500",
+                              self.window.register_screen)
         elif option == 'registered':
-            self.create_label("Successfully registered.", "#36BB00", self.window.register_screen)
+            self.create_label("Successfully registered.",
+                              "#36BB00", self.window.register_screen)
         elif option == 'notes-saved':
-            self.create_label("Text File Saved.", "#36BB00", self.window.notes_screen, pack=True)
+            self.create_label("Text File Saved.", "#36BB00",
+                              self.window.notes_screen, pack=True)
         elif option == 'bad-password':
             # Create a new top-level window.
             pass_req = tk.Toplevel()
@@ -116,7 +137,9 @@ class PromptUserInputs:
             pass_req.after(7500, pass_req.destroy)
 
             # Create an extra label on the window to make user aware password does not meet requirements.
-            self.create_label("Password does not meet \n minimum requirement.", "#E81500", self.window.register_screen)
+            self.create_label("Password does not meet \n minimum requirement.",
+                              "#E81500", self.window.register_screen)
+
 
 class Interface(tk.Frame):
     """ A class for managing the graphical user interface."""
@@ -130,7 +153,7 @@ class Interface(tk.Frame):
         self.parent = parent
 
         # Variables related to the login form.
-        self.entry_username: tk.Entry | None = None 
+        self.entry_username: tk.Entry | None = None
         self.entry_password: tk.Entry | None = None
         self.password_viewer: tk.Button | None = None
 
@@ -153,17 +176,17 @@ class Interface(tk.Frame):
 
         # Title.
         tk.Label(text="Secret Notes", bg="#4BA400", fg="#FFFFFF", width="300",
-                height="2", font=("Arial", 14)).pack()
+                 height="2", font=("Arial", 14)).pack()
         tk.Label(text="").pack()
 
         # Login button.
         tk.Button(text="Login", height="1", width="25", font=("Arial", 12),
-                command=self.login_page).pack()
+                  command=self.login_page).pack()
         tk.Label(text="").pack()
 
         # Register button.
         tk.Button(text="Register", height="1", width="25", font=("Arial", 12),
-                command=self.register_page).pack()
+                  command=self.register_page).pack()
 
     def register_page(self) -> None:
         """Creates the interface for the registration screen
@@ -216,7 +239,8 @@ class Interface(tk.Frame):
         window.columnconfigure(3, weight=1)
 
         # The header for the current window.
-        header = tk.Label(window, text=f"Enter your {entry_point.lower()} details:")
+        header = tk.Label(
+            window, text=f"Enter your {entry_point.lower()} details:")
         header.grid(row=0, column=1)
         tk.Label(window, text="").grid(row=1, column=1)
 
@@ -226,13 +250,14 @@ class Interface(tk.Frame):
 
         # Create a username entry for the user to interact.
         tk.Label(window, text="Username").grid(row=2, column=1)
-        self.entry_username = tk.Entry(window, textvariable=username) 
+        self.entry_username = tk.Entry(window, textvariable=username)
         self.entry_username.grid(row=3, column=1, sticky="news")
 
         # Create a password entry for the user to interact.
         tk.Label(window, text="Password").grid(row=4, column=1)
         bullet = "\u2022"  # Specifies bullet character.
-        self.entry_password = tk.Entry(window, show=bullet, textvariable=password)
+        self.entry_password = tk.Entry(
+            window, show=bullet, textvariable=password)
         self.entry_password.grid(row=5, column=1, sticky="news")
 
         # Create a password viewer button to show and hide the password on the password entry.
@@ -244,11 +269,11 @@ class Interface(tk.Frame):
         tk.Label(window, text="").grid(row=6, column=1)
 
         submit_button: tk.Button = tk.Button(window, text="Submit", height="1", width="10",
-                                command=lambda: self.send_credentials(username.get(), password.get(), login_screen))
+                                             command=lambda: self.send_credentials(username.get(), password.get(), login_screen))
 
         # Allow the user to press enter on the password entry to submit.
         self.entry_password.bind("<Return>", lambda _:
-            self.send_credentials(username.get(), password.get(), login_screen))
+                                 self.send_credentials(username.get(), password.get(), login_screen))
 
         submit_button.grid(row=7, column=1)
 
@@ -261,7 +286,8 @@ class Interface(tk.Frame):
         :return: None
         """
         # Send the credentials.
-        AccountManagement().receive_credentials(username, password, login_flag)
+        AccountManagement(self.parent).receive_credentials(
+            username, password, login_flag)
         self.clear_user_forum(self.entry_username, self.entry_password)
 
     def clear_user_forum(self, entry_user: tk.Entry | None, entry_pass: tk.Entry | None) -> None:
@@ -271,8 +297,10 @@ class Interface(tk.Frame):
         :param Entry entry_pass: the entry box for the password.
         :return: None
         """
-        if entry_user: entry_user.delete(0, tk.END)
-        if entry_pass: entry_pass.delete(0, tk.END)            
+        if entry_user:
+            entry_user.delete(0, tk.END)
+        if entry_pass:
+            entry_pass.delete(0, tk.END)
 
     def password_show(self, entry_password: tk.Entry | None) -> None:
         """Show to users password
@@ -281,7 +309,9 @@ class Interface(tk.Frame):
             been configured with the bullet character (\u2022).
         :return: None
         """
-        if entry_password is None: return
+        if entry_password is None:
+            return
+
         bullet: str = "\u2022"
         if entry_password.cget('show') == bullet:
             entry_password.config(show='')
@@ -291,7 +321,7 @@ class Interface(tk.Frame):
             view = "view"
 
         # Update the image of the password viewer icon.
-        self.photo_image = self.update_password_image(view) 
+        self.photo_image = self.update_password_image(view)
         self.password_viewer.configure(image=self.photo_image)
 
     @staticmethod
@@ -306,9 +336,11 @@ class Interface(tk.Frame):
 
         :return: PhotoImage: the new image.
         """
-        image_name: Literal['invisible', 'view'] = "invisible" if option == "hide" else "view"
+        image_name: Literal['invisible',
+                            'view'] = "invisible" if option == "hide" else "view"
         img = Image.open(f'assets/images/{image_name}.png').resize((20, 20))
         return ImageTk.PhotoImage(img)
+
 
 class AccountManagement(tk.Frame):
     """ A class for managing user account data stored in a database. """
@@ -322,18 +354,19 @@ class AccountManagement(tk.Frame):
         """
         super().__init__()
         # Variables related to the users login detail.
-        self.username: str =  ""
+        self.username: str = ""
         self.password: str = ""
 
         self.parent = parent
 
         # The creation of the account database.
-        self.connect_to_database: sqlite3.Connection = sqlite3.connect("user-data.db")
+        self.connect_to_database: sqlite3.Connection = sqlite3.connect(
+            "user-data.db")
         self.cursor: sqlite3.Cursor = self.connect_to_database.cursor()
         self.create_database()  # Construct the database.
 
         # Provide feedback to the user when certain actions are done.
-        self.interface = PromptUserInputs() 
+        self.interface = PromptUserInputs()
 
         # Close the database on close of the application.
         parent.protocol("WM_DELETE_WINDOW", self.close_connection)
@@ -344,8 +377,10 @@ class AccountManagement(tk.Frame):
         :return: None
         """
         # Create the table if it is an empty database.
-        self.cursor.execute('CREATE TABLE IF NOT EXISTS accounts (username TEXT, password TEXT, uuid TEXT)')
-        self.cursor.execute('CREATE TABLE IF NOT EXISTS notes (uuid TEXT, content TEXT, date DATETIME)')
+        self.cursor.execute(
+            'CREATE TABLE IF NOT EXISTS accounts (username TEXT, password TEXT, uuid TEXT)')
+        self.cursor.execute(
+            'CREATE TABLE IF NOT EXISTS notes (uuid TEXT, content TEXT, date DATETIME)')
 
     def receive_credentials(self, username: str, password: str, login_flag: bool) -> None:
         """Retrieve the user data from the text boxes.
@@ -439,7 +474,8 @@ class AccountManagement(tk.Frame):
         """
         hashed_password = self.hash_password(self.password)
         insert_query = "INSERT INTO accounts (username, password, uuid) VALUES (?, ?, ?)"
-        self.cursor.execute(insert_query, (self.username, hashed_password, str(uuid.uuid4())))
+        self.cursor.execute(insert_query, (self.username,
+                            hashed_password, str(uuid.uuid4())))
         self.connect_to_database.commit()
         self.interface.prompt_user('registered')
 
@@ -466,7 +502,8 @@ class AccountManagement(tk.Frame):
         :param str password: the user submitted password.
         :return: str: the hashed form of the password.
         """
-        if password is None: return
+        if password is None:
+            return
 
         # Use the SHA-256 algorithm to generate a cryptographic hash
         hash_object = hashlib.sha256(password.encode())
@@ -498,7 +535,7 @@ class AccountManagement(tk.Frame):
 
         :return: None
         """
-        note_management = NoteManagement()
+        note_management = NoteManagement(self.parent)
 
         dashboard_screen = tk.Toplevel()
         dashboard_screen.title("Dashboard")
@@ -508,10 +545,14 @@ class AccountManagement(tk.Frame):
         note_management.retrieve_uuid_id(self.access_uuid(self.username))
 
         # Display different options to the user on how to manage their notes.
-        tk.Label(dashboard_screen, text=f"Greetings, {self.username.capitalize()}!").pack()
-        tk.Button(dashboard_screen, text="Create secret note", command=note_management.create_secret_notes).pack()
-        tk.Button(dashboard_screen, text="View secret note", command=note_management.view_notes).pack()
-        tk.Button(dashboard_screen, text="Delete secret note", command=note_management.view_delete_notes).pack()
+        tk.Label(dashboard_screen,
+                 text=f"Greetings, {self.username.capitalize()}!").pack()
+        tk.Button(dashboard_screen, text="Create secret note",
+                  command=note_management.create_secret_notes).pack()
+        tk.Button(dashboard_screen, text="View secret note",
+                  command=note_management.view_notes).pack()
+        tk.Button(dashboard_screen, text="Delete secret note",
+                  command=note_management.view_delete_notes).pack()
 
 
 class NoteManagement(tk.Frame):
@@ -529,7 +570,7 @@ class NoteManagement(tk.Frame):
         self.window = Window.get_instance()
 
         # Provide feedback to the user when certain actions are done.
-        self.interface = PromptUserInputs() 
+        self.interface = PromptUserInputs()
 
     def retrieve_uuid_id(self, uuid: str) -> None:
         """Get the user UUID.
@@ -551,13 +592,15 @@ class NoteManagement(tk.Frame):
 
         # Change the style of the table.
         ttk.Style().configure("Treeview", background="#333333",
-                            foreground="white", fieldbackground="333333")
+                              foreground="white", fieldbackground="333333")
 
         # Create a treeview with 2 columns
-        tree = ttk.Treeview(delete_note_screen, columns=("note", "date"), show="headings")
+        tree = ttk.Treeview(delete_note_screen, columns=(
+            "note", "date"), show="headings")
 
         # Create the Scrollbar widget
-        scrollbar = ttk.Scrollbar(delete_note_screen, orient=tk.VERTICAL, command=tree.yview)
+        scrollbar = ttk.Scrollbar(
+            delete_note_screen, orient=tk.VERTICAL, command=tree.yview)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
         # Set the yscrollcommand of the Treeview widget to the Scrollbar set.
@@ -586,7 +629,7 @@ class NoteManagement(tk.Frame):
 
         # Button to delete the selected content.
         delete_button = tk.Button(delete_note_screen, text="Delete",
-                                command=lambda: self.delete_note(tree))
+                                  command=lambda: self.delete_note(tree))
         delete_button.pack(side=tk.BOTTOM)
 
     def delete_note(self, current_tree: ttk.Treeview) -> None:
@@ -596,7 +639,8 @@ class NoteManagement(tk.Frame):
         :return: None
         """
         # Check if a row is selected.
-        if not current_tree.selection(): return
+        if not current_tree.selection():
+            return
 
         # Get the selected item
         selected_item = current_tree.selection()[0]
@@ -632,10 +676,12 @@ class NoteManagement(tk.Frame):
             count = 1
             for row in results:
                 message = f"{row[0]}, {row[1]} \n"
-                tk.Label(read_file_screen, text=message, font=("arial", 15)).pack()
+                tk.Label(read_file_screen, text=message,
+                         font=("arial", 15)).pack()
                 count += 1
         else:
-            tk.Label(read_file_screen, text="No data.", font=("arial", 15)).pack()
+            tk.Label(read_file_screen, text="No data.",
+                     font=("arial", 15)).pack()
 
     def save_text(self, notes: str) -> None:
         """Save the newly created notes.
@@ -645,7 +691,8 @@ class NoteManagement(tk.Frame):
         """
         insert_query = "INSERT INTO notes (uuid, content, date) VALUES (?, ?, ?)"
         date_time = datetime.datetime.now()
-        self.cursor.execute(insert_query, (self.uuid_id, notes, date_time.strftime("%x")))
+        self.cursor.execute(insert_query, (self.uuid_id,
+                            notes, date_time.strftime("%x")))
         self.connect_to_database.commit()
 
         # Confirm to the user that the data was saved successfully.
@@ -673,7 +720,8 @@ class NoteManagement(tk.Frame):
         text_box.focus_set()
 
         # Save the text.
-        tk.Button(self.window.notes_screen, text="Save", command=lambda: self.save_text(text_box.get("1.0", "end-1c"))).pack()
+        tk.Button(self.window.notes_screen, text="Save", command=lambda: self.save_text(
+            text_box.get("1.0", "end-1c"))).pack()
 
     @staticmethod
     def clear_text(entry: tk.Text) -> None:
@@ -682,11 +730,15 @@ class NoteManagement(tk.Frame):
         :param Text entry: the text in a text box to be deleted.
         :return: None
         """
-        if entry is None: return
+        if entry is None:
+            return
+
         entry.delete('1.0', tk.END)
+
 
 class MainApplication(tk.Frame):
     """ Initialize all the components to the secret note app. """
+
     def __init__(self, parent, *args, **kwargs):
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.interface = Interface(parent)
