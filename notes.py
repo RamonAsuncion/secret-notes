@@ -29,9 +29,9 @@ class Window:
 
     def __init__(self) -> None:
         """Creates a new instance of Window class and assigns it to Window.__instance
-           and creates attributes for register_screen, login_screen, and notes_screen.
-
-           :return: None
+            and creates attributes for register_screen, login_screen, and notes_screen.
+            
+            :return: None
         """
         if Window.__instance is None:
             Window.__instance = self
@@ -45,7 +45,7 @@ class PromptUserInputs:
     """Provide response to the user"""
 
     def __init__(self) -> None:
-         # A instance of the window management class.
+        # A instance of the window management class.
         self.window: Window = Window.get_instance()
 
     @staticmethod
@@ -130,7 +130,7 @@ class Interface(tk.Frame):
         self.parent = parent
 
         # Variables related to the login form.
-        self.entry_username: tk.Entry | None = None # FIXME: I have to declare them to something other than None.
+        self.entry_username: tk.Entry | None = None 
         self.entry_password: tk.Entry | None = None
         self.password_viewer: tk.Button | None = None
 
@@ -262,7 +262,7 @@ class Interface(tk.Frame):
         """
         # Send the credentials.
         AccountManagement().receive_credentials(username, password, login_flag)
-        self.clear_user_forum(self.entry_username, self.entry_password) #FIXME: I don't really like this.
+        self.clear_user_forum(self.entry_username, self.entry_password)
 
     def clear_user_forum(self, entry_user: tk.Entry | None, entry_pass: tk.Entry | None) -> None:
         """Delete the username and password on the entry box once submitted. 
@@ -274,7 +274,7 @@ class Interface(tk.Frame):
         if entry_user: entry_user.delete(0, tk.END)
         if entry_pass: entry_pass.delete(0, tk.END)            
 
-    def password_show(self, entry_password: tk.Entry | None) -> None: # FIXME: I should remove the | None.
+    def password_show(self, entry_password: tk.Entry | None) -> None:
         """Show to users password
 
         :param Entry entry_password: an entry box specifically for a password that has
@@ -313,8 +313,10 @@ class Interface(tk.Frame):
 class AccountManagement(tk.Frame):
     """ A class for managing user account data stored in a database. """
 
-    def __init__(self) -> None:
+    def __init__(self, parent) -> None:
         """Initialize the account management system of the application.
+
+        :param parent: the parent window.
 
         :return: None
         """
@@ -322,6 +324,8 @@ class AccountManagement(tk.Frame):
         # Variables related to the users login detail.
         self.username: str =  ""
         self.password: str = ""
+
+        self.parent = parent
 
         # The creation of the account database.
         self.connect_to_database: sqlite3.Connection = sqlite3.connect("user-data.db")
@@ -331,10 +335,8 @@ class AccountManagement(tk.Frame):
         # Provide feedback to the user when certain actions are done.
         self.interface = PromptUserInputs() 
 
-        # FIXME: DEBUG
         # Close the database on close of the application.
-        # self.parent.protocol("WM_DELETE_WINDOW",
-        #                      self.close_connection)
+        parent.protocol("WM_DELETE_WINDOW", self.close_connection)
 
     def create_database(self) -> None:
         """Creates a SQL database to store the user data.
@@ -515,7 +517,7 @@ class AccountManagement(tk.Frame):
 class NoteManagement(tk.Frame):
     """ A class for managing notes stored in a database. """
 
-    def __init__(self) -> None:
+    def __init__(self, parent) -> None:
         """Initialize the note management components of the application.
 
         :return: None
@@ -549,7 +551,7 @@ class NoteManagement(tk.Frame):
 
         # Change the style of the table.
         ttk.Style().configure("Treeview", background="#333333",
-                              foreground="white", fieldbackground="333333")
+                            foreground="white", fieldbackground="333333")
 
         # Create a treeview with 2 columns
         tree = ttk.Treeview(delete_note_screen, columns=("note", "date"), show="headings")
@@ -584,7 +586,7 @@ class NoteManagement(tk.Frame):
 
         # Button to delete the selected content.
         delete_button = tk.Button(delete_note_screen, text="Delete",
-                                  command=lambda: self.delete_note(tree))
+                                command=lambda: self.delete_note(tree))
         delete_button.pack(side=tk.BOTTOM)
 
     def delete_note(self, current_tree: ttk.Treeview) -> None:
@@ -688,8 +690,8 @@ class MainApplication(tk.Frame):
     def __init__(self, parent, *args, **kwargs):
         tk.Frame.__init__(self, parent, *args, **kwargs)
         self.interface = Interface(parent)
-        self.account_management = AccountManagement() # FIXME: parent
-        self.note_management = NoteManagement()
+        self.account_management = AccountManagement(parent)
+        self.note_management = NoteManagement(parent)
 
 
 if __name__ == '__main__':
