@@ -10,19 +10,19 @@ import sqlite3
 import hashlib
 import uuid
 import datetime
-from PIL import Image, ImageTk
 from typing import Literal
+from PIL import Image, ImageTk
 
 
 class Setting:
     """A class for managing the settings of the application."""
 
-    def __init__(self) -> None:
-        pass
+    def __init__(self, label: tk.Label) -> None:
+        self.label = label
 
-    def change_color(self, gui) -> None:
+    def change_color(self) -> None:
         """Change the color of the main screen window."""
-        print("change color")
+        self.label.configure(background=askcolor()[1])
 
 
 class Window:
@@ -54,7 +54,7 @@ class Window:
             self.login_screen: tk.Toplevel | None = None
             self.notes_screen: tk.Toplevel | None = None
         else:
-            raise Exception("ERROR: This class is a singleton!")
+            raise ValueError("ERROR: This class is a singleton!")
 
 
 class PromptUserInputs:
@@ -77,7 +77,7 @@ class PromptUserInputs:
         label: tk.Label = tk.Label(
             window, text=text, fg=color, font=("Arial", 12), width=25)
         label.after(1500, label.destroy)
-        label.pack() if pack else label.grid(row=8, column=1)
+        label: tk.Label = label.pack() if pack else label.grid(row=8, column=1)
 
     def prompt_user(self, option: str) -> None:
         """Prompt the user with prompts based on actions
@@ -161,7 +161,7 @@ class Interface(tk.Frame):
         self.window: Window = Window.get_instance()
 
         # A instance of the settings class.
-        self.settings: Setting = Setting()
+        self.settings: Setting | None = None
 
         # A reference to the password viewer image.
         self.photo_image: ImageTk.PhotoImage = self.update_password_image()
@@ -177,21 +177,27 @@ class Interface(tk.Frame):
         self.parent.title("Secret Notes")
         self.parent.geometry("350x250")
 
+        # Remove ability to resize the window.
+        self.parent.resizable(False, False)
+
         # Default color of the UI.
         ui_color: str = "#4BA400"
+
+        # Title.
+        title = tk.Label(text="Secret Notes", bg=ui_color, fg="#FFFFFF", width="300",
+                         height="2", font=("Arial", 14))
+        title.pack(side='top')
+
+        # Create a settings button.
+        self.settings = Setting(title)
 
         image_name = "settings"
         img = Image.open(f'assets/images/{image_name}.png').resize((20, 20))
         image = ImageTk.PhotoImage(img)
-        setting_button = tk.Button(root, image=image, bg=ui_color, 
-                command=self.settings.change_color)
+        setting_button = tk.Button(root, image=image, bg=ui_color,
+                                   command=self.settings.change_color)
         setting_button.image = image
         setting_button.pack(side='top', anchor='ne')
-
-        # Title.
-        tk.Label(text="Secret Notes", bg=ui_color, fg="#FFFFFF", width="300",
-                 height="2", font=("Arial", 14)).pack()
-        tk.Label(text="").pack()
 
         # Login button.
         tk.Button(text="Login", height="1", width="25", font=("Arial", 12),
@@ -210,6 +216,7 @@ class Interface(tk.Frame):
         self.window.register_screen = tk.Toplevel()
         self.close_window(self.window.login_screen)
         self.create_page(self.window.register_screen, login_screen=False)
+        self.window.register_screen.resizable(False, False)
 
     def login_page(self) -> None:
         """Creates the interface for the login screen
@@ -219,6 +226,7 @@ class Interface(tk.Frame):
         self.window.login_screen = tk.Toplevel()
         self.close_window(self.window.register_screen)
         self.create_page(self.window.login_screen)
+        self.window.login_screen.resizable(False, False)
 
     @staticmethod
     def close_window(window) -> None:
@@ -436,8 +444,8 @@ class AccountManagement(tk.Frame):
             raise ValueError('Password cannot be None.')
 
         # Read in the common_words file:
-        with open('common_words.txt', 'r') as f:
-            common_words = f.read().splitlines()
+        with open('common_words.txt', 'rb') as common_words_file:
+            common_words = common_words_file.read().splitlines()
 
         # Check if the password is at least 8 characters long.
         if len(password) < 8:
@@ -541,8 +549,8 @@ class AccountManagement(tk.Frame):
 
         select_query = "SELECT uuid FROM accounts WHERE username = ?"
         self.cursor.execute(select_query, (username,))
-        uuid_id: tuple = self.cursor.fetchone()
-        return uuid_id[0]
+        uuid_code: tuple = self.cursor.fetchone()
+        return uuid_code[0]
 
     def dashboard(self) -> None:
         """Users dashboard.
@@ -556,7 +564,7 @@ class AccountManagement(tk.Frame):
         dashboard_screen.geometry("350x250")
 
         # Send the UUID of the logged-in user to the note management.
-        note_management.retrieve_uuid_id(self.access_uuid(self.username))
+        note_management.retrieve_uuid_code(self.access_uuid(self.username))
 
         # Display different options to the user on how to manage their notes.
         tk.Label(dashboard_screen,
@@ -579,20 +587,22 @@ class NoteManagement(tk.Frame):
         """
         super().__init__()
         # The creation of the account database.
+        self.parent = parent
         self.connect_to_database = sqlite3.connect("user-data.db")
         self.cursor = self.connect_to_database.cursor()
         self.window = Window.get_instance()
+        self.uuid_code = None
 
         # Provide feedback to the user when certain actions are done.
         self.interface = PromptUserInputs()
 
-    def retrieve_uuid_id(self, uuid: str) -> None:
+    def retrieve_uuid_code(self, x_uuid: str) -> None:
         """Get the user UUID.
 
         :param uuid: the user's UUID.
         :return: None
         """
-        self.uuid_id = uuid
+        self.uuid_code = x_uuid
 
     def view_delete_notes(self) -> None:
         """View the set of notes scheduled to be deleted in a tree view.
@@ -682,10 +692,9 @@ class NoteManagement(tk.Frame):
         read_file_screen.title("Notes")
         read_file_screen.geometry("350x250")
         select_query = "SELECT content, date FROM notes WHERE uuid = ?"
-        self.cursor.execute(select_query, (self.uuid_id,))
+        self.cursor.execute(select_query, (self.uuid_code,))
         results = self.cursor.fetchall()
 
-        # TODO: Make this into a tree view.
         if results:
             count = 1
             for row in results:
@@ -705,7 +714,7 @@ class NoteManagement(tk.Frame):
         """
         insert_query = "INSERT INTO notes (uuid, content, date) VALUES (?, ?, ?)"
         date_time = datetime.datetime.now()
-        self.cursor.execute(insert_query, (self.uuid_id,
+        self.cursor.execute(insert_query, (self.uuid_code,
                             notes, date_time.strftime("%x")))
         self.connect_to_database.commit()
 
