@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import tkinter as tk
+from tkinter.colorchooser import askcolor
 from tkinter import ttk
 import sqlite3
 import hashlib
@@ -16,13 +17,12 @@ from typing import Literal
 class Setting:
     """A class for managing the settings of the application."""
 
-    # Change the color of the main screen window.
     def __init__(self) -> None:
         pass
 
-    def change_color(self):
-        """ Change the color of the main screen window. """
-        return
+    def change_color(self, gui) -> None:
+        """Change the color of the main screen window."""
+        print("change color")
 
 
 class Window:
@@ -160,6 +160,9 @@ class Interface(tk.Frame):
         # A instance of the window management class.
         self.window: Window = Window.get_instance()
 
+        # A instance of the settings class.
+        self.settings: Setting = Setting()
+
         # A reference to the password viewer image.
         self.photo_image: ImageTk.PhotoImage = self.update_password_image()
 
@@ -174,8 +177,19 @@ class Interface(tk.Frame):
         self.parent.title("Secret Notes")
         self.parent.geometry("350x250")
 
+        # Default color of the UI.
+        ui_color: str = "#4BA400"
+
+        image_name = "settings"
+        img = Image.open(f'assets/images/{image_name}.png').resize((20, 20))
+        image = ImageTk.PhotoImage(img)
+        setting_button = tk.Button(root, image=image, bg=ui_color, 
+                command=self.settings.change_color)
+        setting_button.image = image
+        setting_button.pack(side='top', anchor='ne')
+
         # Title.
-        tk.Label(text="Secret Notes", bg="#4BA400", fg="#FFFFFF", width="300",
+        tk.Label(text="Secret Notes", bg=ui_color, fg="#FFFFFF", width="300",
                  height="2", font=("Arial", 14)).pack()
         tk.Label(text="").pack()
 
