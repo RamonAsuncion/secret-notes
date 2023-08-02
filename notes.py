@@ -596,13 +596,13 @@ class NoteManagement(tk.Frame):
         # Provide feedback to the user when certain actions are done.
         self.interface = PromptUserInputs()
 
-    def retrieve_uuid_code(self, x_uuid: str) -> None:
+    def retrieve_uuid_code(self, temp_uuid: str) -> None:
         """Get the user UUID.
 
         :param uuid: the user's UUID.
         :return: None
         """
-        self.uuid_code = x_uuid
+        self.uuid_code = temp_uuid
 
     def view_delete_notes(self) -> None:
         """View the set of notes scheduled to be deleted in a tree view.
