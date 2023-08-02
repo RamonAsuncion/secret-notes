@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from __future__ import annotations
+"""
+A Tkinter application that allows users to create and store notes in a database.
+"""
 
+from __future__ import annotations
 import tkinter as tk
 from tkinter.colorchooser import askcolor
 from tkinter import ttk
@@ -10,6 +13,7 @@ import sqlite3
 import hashlib
 import uuid
 import datetime
+import json
 from typing import Literal
 from PIL import Image, ImageTk
 
@@ -22,7 +26,22 @@ class Setting:
 
     def change_color(self) -> None:
         """Change the color of the main screen window."""
-        self.label.configure(background=askcolor()[1])
+        color = askcolor()[1]
+        self.label.configure(background=color)
+        self.save_color(color)
+
+    def save_color(self, color: str) -> None:
+        """Save the updated color to a JSON file."""
+        try:
+            with open("settings.json", "r", encoding="utf-8") as file:
+                settings = json.load(file)
+        except FileNotFoundError:
+            settings = {"background_color": "#4BA400"}
+
+        settings["background_color"] = color
+
+        with open("settings.json", "w", encoding="utf-8") as file:
+            json.dump(settings, file, indent=4)
 
 
 class Window:
@@ -181,7 +200,12 @@ class Interface(tk.Frame):
         self.parent.resizable(False, False)
 
         # Default color of the UI.
-        ui_color: str = "#4BA400"
+        try:
+            with open("settings.json", "r", encoding="utf-8") as file:
+                settings = json.load(file)
+            ui_color = settings.get("background_color", "#4BA400")
+        except FileNotFoundError:
+            ui_color = "#4BA400"
 
         # Title.
         title = tk.Label(text="Secret Notes", bg=ui_color, fg="#FFFFFF", width="300",
