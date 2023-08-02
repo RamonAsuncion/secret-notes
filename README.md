@@ -6,7 +6,7 @@ Secret Notes is a tkinter based application that allows you to create, save, and
 
 ## Installation
 
-Use the package manager [pip](https://pip.pypa.io/en/stable/) to install what is necessary for the web scraper.
+Use the package manager [pip](https://pip.pypa.io/en/stable/) to install what is necessary for the tkinter application to run.
 
 ```bash
 pip install pillow
