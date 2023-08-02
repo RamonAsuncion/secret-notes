@@ -1,23 +1,37 @@
-# Secret Notes App
+![Logo]()
 
-This is a simple Python app that uses the `tkinter` library to create a GUI.
+# Secret Notes
 
-## Dependencies
+Secret Notes is a tkinter based application that allows you to create, save, and open notes.
 
-- Python 3.10 or higher
-- tkinter library (included with Python)
-- sqlite3
-- hashlib
-- uuid
-- datetime  
-- pillow
+## Installation
+
+Use the package manager [pip](https://pip.pypa.io/en/stable/) to install what is necessary for the web scraper.
+
+```bash
+pip install pillow
+```
+
+Alternatively, you can also use the `requirement.txt` file to install the required packages.
+
+```bash
+pip install -r requirements.txt
+```
+
+## Contributing
+
+You are free to open any pull request.
 
 ## Usage
-
-To use this app, you will need to install the required dependencies and then run the following command:
 
 ```bash
 python notes.py
 ```
 
-The app will launch a window with a button that, when clicked, displays a message.
+The program should open up a tkinter window. From there, you can create, save, and open notes after registering an account.
+
+## License
+
+[![License](http://img.shields.io/:license-mit-blue.svg)](http://mit-license.org)
+
+- [MIT](https://choosealicense.com/licenses/mit/)
