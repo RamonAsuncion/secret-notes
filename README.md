@@ -1,4 +1,4 @@
-![Logo]()
+![Logo](assets/images/notes.png)
 
 # Secret Notes
 
